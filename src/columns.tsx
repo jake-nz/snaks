@@ -1,7 +1,6 @@
 import React from 'react'
 import { RightOutlined } from '@ant-design/icons'
 import { Button, Typography } from 'antd'
-import type { AnyObject } from 'antd/es/_util/type'
 import Link from 'next/link'
 
 const { Text } = Typography
@@ -19,6 +18,8 @@ export const idColumn = (basePath: string) => ({
   ),
   width: 120
 })
+
+type AnyObject = Record<PropertyKey, any>
 
 export function detailsLinkColumn<RecordType = AnyObject>(
   path: string | ((record: RecordType) => string),
