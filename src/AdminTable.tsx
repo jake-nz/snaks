@@ -1,7 +1,7 @@
 'use client'
 
 import type { TableProps } from 'antd'
-import { Result, Table } from 'antd'
+import { Flex, Result, Switch, Table, Typography } from 'antd'
 import type { AnyObject } from 'antd/es/_util/type'
 import type {
   ColumnsType,
@@ -15,10 +15,12 @@ import {
   useRouter,
   useSearchParams
 } from 'next/navigation'
-import React, { Suspense } from 'react'
+import React, { Suspense, useState } from 'react'
 import useSWR from 'swr'
 import type { Fetcher } from 'swr'
 import type { AdminTableRecord, FetcherQuery, ListQuery } from './antAdminTypes'
+
+const { Text } = Typography
 
 const ITEMS_PER_PAGE = 25
 
@@ -26,6 +28,7 @@ type AdminTableProps<RecordType extends AdminTableRecord = AdminTableRecord> = {
   fetcher: Fetcher<RecordType[], FetcherQuery>
   swrKey: string
   columns: ColumnsType<RecordType>
+  defaultAutoRefetch?: number
   defaultFilters?: ListQuery['filters']
   defaultSorter?: SorterResult<RecordType>[]
 } & Omit<TableProps<RecordType>, 'data'>
@@ -49,6 +52,7 @@ export const AdminTableComponent = <
   columns,
   loading,
   swrKey,
+  defaultAutoRefetch,
   defaultFilters,
   defaultSorter,
   ...props
@@ -60,11 +64,22 @@ export const AdminTableComponent = <
 
   const updatedColumns = columns.map(c => updateColumn(c, query))
 
+  const [autoRefetch, _setAutoRefetch] = useState(defaultAutoRefetch)
+
   // Get data
-  const { data, error, isLoading } = useSWR<RecordType[], any, FetcherQuery>(
-    { swrKey, ...query },
-    fetcher
-  )
+  const { data, error, isLoading, isValidating, mutate } = useSWR<
+    RecordType[],
+    any,
+    FetcherQuery
+  >({ swrKey, ...query }, fetcher, {
+    refreshInterval: autoRefetch ? autoRefetch * 1000 : undefined
+  })
+
+  const setAutoRefetch = (on: boolean) => {
+    const defaultValue = defaultAutoRefetch || 30
+    _setAutoRefetch(on ? defaultValue * 1000 : undefined)
+    mutate()
+  }
 
   const pagination = { ...usePagination(data), ...props.pagination }
 
@@ -80,6 +95,9 @@ export const AdminTableComponent = <
       />
     )
 
+  const showAutoRefetch = defaultAutoRefetch !== undefined
+  const showTitle = showAutoRefetch || props.title
+
   return (
     <Table<RecordType>
       dataSource={data}
@@ -92,6 +110,26 @@ export const AdminTableComponent = <
       pagination={pagination}
       onChange={updateUrlQuery}
       {...props}
+      title={
+        showTitle
+          ? currentPageData => (
+              <Flex>
+                <div style={{ flex: 1 }}>{props.title?.(currentPageData)}</div>
+                {showAutoRefetch && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Switch
+                      checked={Boolean(autoRefetch)}
+                      onChange={setAutoRefetch}
+                      loading={isValidating}
+                      style={{ marginRight: '0.5em' }}
+                    />
+                    <Text>Auto Refresh ({defaultAutoRefetch}s)</Text>
+                  </div>
+                )}
+              </Flex>
+            )
+          : undefined
+      }
     />
   )
 }
