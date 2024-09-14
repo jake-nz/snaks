@@ -36,6 +36,7 @@ export const iterateSorter = function* <DB, TB extends keyof DB>(
 ) {
   for (const sort of sorter) {
     if (!sort.columnKey) continue
+    if (!sort.order) continue
     const direction: OrderByDirectionExpression =
       sort.order === 'descend' ? 'desc' : 'asc'
     yield [sort.columnKey as StringReference<DB, TB>, direction] as const
