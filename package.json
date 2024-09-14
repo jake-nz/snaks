@@ -1,7 +1,7 @@
 {
   "name": "snaks",
   "license": "MIT",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -10,14 +10,14 @@
   ],
   "exports": {
     ".": {
-      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./client": {
-      "require": "./dist/client.js",
+      "types": "./dist/client.d.ts",
       "import": "./dist/client.mjs",
-      "types": "./dist/client.d.ts"
+      "require": "./dist/client.js"
     }
   },
   "scripts": {
